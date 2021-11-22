@@ -13,3 +13,9 @@ const UserSchema = new Schema({
 UserSchema.plugin(passportLocalMongoose);
 
 module.exports = mongoose.model("User", UserSchema);
+
+// Go to Mongo Monitor
+// show dbs
+// use authDemo
+// show collections
+// db.user.find()
