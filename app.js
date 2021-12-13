@@ -18,7 +18,6 @@ const mongoSanitize = require("express-mongo-sanitize");
 const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
-const { contentSecurityPolicy } = require("helmet");
 
 const MongoStore = require("connect-mongo");
 
@@ -46,15 +45,16 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
-app.use(mongoSanitize());
-
-const secret = process.env.SECRET || "thisshouldbeabettersecret";
+app.use(
+  mongoSanitize({
+    replaceWith: "_",
+  })
+);
+const secret = process.env.SECRET || "thisshouldbeabettersecret!";
 
 const store = MongoStore.create({
   mongoUrl: dbUrl,
-  crypto: {
-    secret,
-  },
+  secret,
   touchAfter: 24 * 60 * 60,
 });
 
@@ -70,7 +70,7 @@ const sessionConfig = {
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    secure: true,
+    // secure: true,
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
@@ -116,7 +116,7 @@ app.use(
         "'self'",
         "blob:",
         "data:",
-        "https://res.cloudinary.com/ddamag1al/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
+        "https://res.cloudinary.com/douqbebwk/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
         "https://images.unsplash.com",
       ],
       fontSrc: ["'self'", ...fontSrcUrls],
@@ -132,9 +132,6 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
-  if (!["/login", "/"].includes(req.originalUrl)) {
-    req.session.returnTo = req.originalUrl;
-  }
   res.locals.currentUser = req.user;
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
