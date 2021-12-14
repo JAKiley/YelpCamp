@@ -29,11 +29,13 @@ mongoose.connect(dbUrl, {
   useFindAndModify: false,
 });
 
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", () => {
-  console.log("Database connected");
-});
+async (req, res, next) => {
+  const db = await mongoose.connection;
+  db.on("error", console.error.bind(console, "connection error:"));
+  db.once("open", () => {
+    console.log("Database connected");
+  });
+};
 
 const app = express();
 
@@ -153,7 +155,6 @@ app.use("/", userRoutes);
 app.use("/campgrounds", campgroundRoutes);
 app.use("/campgrounds/:id/reviews", reviewRoutes);
 
-console.log(`routtes ${userRoutes}`);
 app.get("/", (req, res) => {
   res.render("home");
 });
