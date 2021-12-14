@@ -6,7 +6,6 @@ const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 const ejsMate = require("ejs-mate");
-const session = require("express-session");
 const flash = require("connect-flash");
 const ExpressError = require("./utils/ExpressError");
 const methodOverride = require("method-override");
@@ -19,8 +18,8 @@ const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
 
+const session = require("express-session");
 const MongoStore = require("connect-mongo");
-
 const dbUrl = process.env.DB_URL || "mongodb://localhost:27017/yelp-camp";
 
 mongoose.connect(dbUrl, {
@@ -52,10 +51,12 @@ app.use(
 );
 const secret = process.env.SECRET || "thisshouldbeabettersecret!";
 
-const store = new MongoStore({
-  url: dbUrl,
-  secret,
+const store = MongoStore.create({
+  mongoUrl: dbUrl,
   touchAfter: 24 * 60 * 60,
+  crypto: {
+    secret,
+  },
 });
 
 store.on("error", function (e) {
@@ -116,7 +117,7 @@ app.use(
         "'self'",
         "blob:",
         "data:",
-        "https://res.cloudinary.com/douqbebwk/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
+        "https://res.cloudinary.com/ddamag1al/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
         "https://images.unsplash.com",
       ],
       fontSrc: ["'self'", ...fontSrcUrls],
