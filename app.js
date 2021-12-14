@@ -59,6 +59,8 @@ const store = MongoStore.create({
   },
 });
 
+console.log("mongo store created");
+
 store.on("error", function (e) {
   console.log("SESSION STORE ERROR", e);
 });
@@ -78,8 +80,11 @@ const sessionConfig = {
 };
 
 app.use(session(sessionConfig));
+console.log("session config");
 app.use(flash());
+console.log("flash");
 app.use(helmet());
+console.log("helmet");
 
 const scriptSrcUrls = [
   "https://stackpath.bootstrapcdn.com",
@@ -124,6 +129,7 @@ app.use(
     },
   })
 );
+console.log("scripts");
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -132,6 +138,8 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
+console.log("passport");
+
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
   res.locals.success = req.flash("success");
@@ -139,10 +147,13 @@ app.use((req, res, next) => {
   next();
 });
 
+console.log("locals");
+
 app.use("/", userRoutes);
 app.use("/campgrounds", campgroundRoutes);
 app.use("/campgrounds/:id/reviews", reviewRoutes);
 
+console.log(`routtes ${userRoutes}`);
 app.get("/", (req, res) => {
   res.render("home");
 });
