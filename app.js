@@ -29,19 +29,17 @@ mongoose.connect(dbUrl, {
   useFindAndModify: false,
 });
 
-async (req, res, next) => {
-  const db = await mongoose.connection;
-  db.on("error", console.error.bind(console, "connection error:"));
-  db.once("open", () => {
-    console.log("Database connected");
-  });
-};
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error:"));
+db.once("open", () => {
+  console.log("Database connected");
+});
 
 const app = express();
 
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "Views"));
+app.set("views", path.join(__dirname, "views"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
@@ -73,7 +71,7 @@ const sessionConfig = {
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    secure: true,
+    // secure: true,
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
