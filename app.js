@@ -41,7 +41,7 @@ const app = express();
 
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+app.set("views", path.join(__dirname, "Views"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
@@ -60,8 +60,6 @@ const store = MongoStore.create({
     secret,
   },
 });
-
-console.log("mongo store created");
 
 store.on("error", function (e) {
   console.log("SESSION STORE ERROR", e);
@@ -82,11 +80,8 @@ const sessionConfig = {
 };
 
 app.use(session(sessionConfig));
-console.log("session config");
 app.use(flash());
-console.log("flash");
 app.use(helmet());
-console.log("helmet");
 
 const scriptSrcUrls = [
   "https://stackpath.bootstrapcdn.com",
@@ -131,7 +126,6 @@ app.use(
     },
   })
 );
-console.log("scripts");
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -140,16 +134,12 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-console.log("passport");
-
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
   next();
 });
-
-console.log("locals");
 
 app.use("/", userRoutes);
 app.use("/campgrounds", campgroundRoutes);
