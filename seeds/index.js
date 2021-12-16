@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const mongoose = require("mongoose");
 const cities = require("./cities");
 const { places, descriptors } = require("./seedHelpers");
@@ -41,12 +45,8 @@ const seedDB = async () => {
       },
       images: [
         {
-          url: "https://res.cloudinary.com/ddamag1al/image/upload/v1600060601/YelpCamp/ahfnenvca4tha00h2ubt.png",
-          filename: "YelpCamp/ahfnenvca4tha00h2ubt",
-        },
-        {
-          url: "https://res.cloudinary.com/ddamag1al/image/upload/v1600060601/YelpCamp/ruyoaxgf72nzpi4y6cdi.png",
-          filename: "YelpCamp/ruyoaxgf72nzpi4y6cdi",
+          url: "https://res.cloudinary.com/ddamag1al/image/upload/v1638723295/YelpCamp/wfvtj4brf1rmdb5852nv.jpg",
+          filename: "YelpCamp/wfvtj4brf1rmdb5852nv.jpg",
         },
       ],
     });
