@@ -101,6 +101,8 @@ const connectSrcUrls = [
   "https://api.mapbox.com",
   "https://*.tiles.mapbox.com",
   "https://events.mapbox.com",
+  "https://udemy.com/*",
+  "https://github.com/JAKiley/YelpCamp",
 ];
 const fontSrcUrls = [];
 app.use(
