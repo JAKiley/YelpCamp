@@ -12,7 +12,8 @@ How to deploy to Heroku
         Heroku login
     start another gitbash session in Yelpcamp folder
         git push heroku main
-        
+
+
 1. Roles
 https://github.com/nax3t/yelp-camp-refactored/tree/roles
 

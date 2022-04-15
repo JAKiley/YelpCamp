@@ -5,10 +5,42 @@ const geocoder = mbxGeocoding({ accessToken: mapBoxToken });
 const { cloudinary } = require("../cloudinary");
 
 module.exports.index = async (req, res) => {
-  // const campgrounds = await Campground.find({}).populate('popupText');
-  const campgrounds = await Campground.find({});
+  const campgrounds = await Campground.paginate(
+    {},
+    {
+      page: req.query.page || 1,
+      limit: 10,
+      sort: "_id",
+    }
+  );
+  campgrounds.page = Number(campgrounds.page);
+  let totalPages = campgrounds.totalPages;
+  let currentPage = campgrounds.page;
+  let startPage;
+  let endPage;
 
-  res.render("campgrounds/index", { campgrounds });
+  if (totalPages <= 10) {
+    startPage = 1;
+    endPage = totalPages;
+  } else {
+    if (currentPage <= 6) {
+      startPage = 1;
+      endPage = 10;
+    } else if (currentPage + 4 >= totalPages) {
+      startPage = totalPages - 9;
+      endPage = totalPages;
+    } else {
+      startPage = currentPage - 5;
+      endPage = currentPage + 4;
+    }
+  }
+  res.render("campgrounds/index", {
+    campgrounds,
+    startPage,
+    endPage,
+    currentPage,
+    totalPages,
+  });
 };
 
 module.exports.renderNewForm = (req, res) => {
