@@ -1,5 +1,5 @@
 const User = require("../models/user");
-
+const adminSecret = process.env.ADMINCODE;
 module.exports.renderRegister = (req, res) => {
   res.render("users/register");
 };
@@ -7,8 +7,10 @@ module.exports.renderRegister = (req, res) => {
 module.exports.register = async (req, res, next) => {
   try {
     const { email, username, password, adminCode } = req.body;
-    if (req.body.adminCode === "secretcode123") {
+    if (adminCode === adminSecret) {
       isAdmin = true;
+    } else {
+      isAdmin = false;
     }
     const user = new User({ email, username, isAdmin });
 
