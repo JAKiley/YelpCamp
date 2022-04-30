@@ -103,6 +103,7 @@ const connectSrcUrls = [
   "https://events.mapbox.com",
   "https://udemy.com/*",
   "https://github.com/JAKiley/YelpCamp",
+  "https://api.sendgrid.com/*",
 ];
 const fontSrcUrls = [];
 app.use(

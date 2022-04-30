@@ -2,6 +2,7 @@ const express = require("express");
 const passport = require("passport");
 const router = express.Router();
 const catchAsync = require("../utils/catchAsync");
+const helpers = require("../utils/helpers");
 const users = require("../controllers/users");
 
 router
@@ -13,6 +14,7 @@ router
   .route("/login")
   .get(users.renderLogin)
   .post(
+    catchAsync(helpers.checkIfNotVerified),
     passport.authenticate("local", {
       failureFlash: true,
       failureRedirect: "/login",
