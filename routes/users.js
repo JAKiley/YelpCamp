@@ -10,6 +10,8 @@ router
   .get(users.renderRegister)
   .post(catchAsync(users.register));
 
+router.get("/verify/token", catchAsync(users.verifyFromEmail));
+
 router
   .route("/login")
   .get(users.renderLogin)

@@ -35,7 +35,7 @@ module.exports.register = async (req, res, next) => {
     await new Email(user, url).sendWelcome("YelpCamp");
     req.flash(
       "success",
-      "Thanks for registering, Please check your email to verify your account. Link expires in 10 minutes"
+      `Thanks for registering, ${username}. Please check your email to verify your account. Link expires in 10 minutes`
     );
     // Colts original code where it auto logs in after register.
     // req.login(registeredUser, (err) => {
@@ -48,6 +48,27 @@ module.exports.register = async (req, res, next) => {
     req.flash("error", e.message);
     res.redirect("register");
   }
+};
+
+module.exports.verifyFromEmail = async (req, res, next) => {
+  const token = await Token.findOne({ token: req.query.token });
+  if (!token) {
+    req.flash("error", "Token is invalid");
+    return res.redirect("/campgrounds");
+  }
+  const user = await User.findOne({ _id: token._userId });
+  console.log(`token user id ${token._userId}`);
+  console.log(`user ${user}`);
+  user.isVerified = true;
+  user.expires = undefined;
+  await user.save();
+  await token.remove();
+  await req.login(user, (err) => {
+    req.flash("success", `Welcome to YelpCamp ${user.username}`);
+    const redirectUrl = req.session.redirectTo || "/campgrounds";
+    delete req.session.redirectTo;
+    return res.redirect(redirectUrl);
+  });
 };
 
 module.exports.renderLogin = (req, res) => {
