@@ -19,7 +19,3 @@ https://github.com/nax3t/yelp-camp-refactored/tree/roles
 
 2. Profiles
 https://github.com/nax3t/yelp-camp-refactored/tree/profile
-
-3. Password Reset
-https://github.com/nax3t/yelp-camp-refactored/tree/password-reset/views
-https://www.bilibili.com/video/BV1KA411t7VC/
