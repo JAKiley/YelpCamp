@@ -49,26 +49,154 @@ module.exports.register = async (req, res, next) => {
     res.redirect("register");
   }
 };
-
+// Email verification goes here
 module.exports.verifyFromEmail = async (req, res, next) => {
-  const token = await Token.findOne({ token: req.query.token });
-  if (!token) {
-    req.flash("error", "Token is invalid");
+  try {
+    const token = await Token.findOne({ token: req.query.token });
+    console.log("token found" + token);
+    if (!token) {
+      req.flash("error", "Token is invalid");
+      return res.redirect("/campgrounds");
+    }
+    console.log("searching for user " + token._userId);
+    const user = await User.findOne({ _id: token._userId });
+    console.log("token user found " + user);
+    user.isVerified = true;
+    user.expires = undefined;
+    await user.save();
+    await token.remove();
+    await req.login(user, (err) => {
+      console.log(user);
+      req.flash("success", `Welcome to YelpCamp ${user.username}`);
+      const redirectUrl = req.session.redirectTo || "/campgrounds";
+      delete req.session.redirectTo;
+      return res.redirect(redirectUrl);
+    });
+  } catch (e) {
+    req.flash("error", e.message);
     return res.redirect("/campgrounds");
   }
-  const user = await User.findOne({ _id: token._userId });
-  console.log(`token user id ${token._userId}`);
-  console.log(`user ${user}`);
-  user.isVerified = true;
-  user.expires = undefined;
-  await user.save();
-  await token.remove();
-  await req.login(user, (err) => {
-    req.flash("success", `Welcome to YelpCamp ${user.username}`);
-    const redirectUrl = req.session.redirectTo || "/campgrounds";
-    delete req.session.redirectTo;
-    return res.redirect(redirectUrl);
-  });
+};
+
+// Request New Token
+module.exports.newVerificationToken = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      req.flash("error", "This account does not exist");
+      return res.redirect("/register");
+    }
+    if (user && user.isVerified) {
+      req.flash(
+        "error",
+        "You have already verified your account. Please log in."
+      );
+      return res.redirect("/login");
+    }
+    const userToken = new Token({
+      _userId: user._id,
+      token: crypto.randomBytes(16).toString("hex"),
+    });
+    await userToken.save();
+    const url = helpers.setUrl(req, "verify", `token?token=${userToken.token}`);
+    await new Email(user, url).sendWelcome("Yelpcamp - New Token");
+    req.flash(
+      "success",
+      "Please check your email to verify your account. Link expires in 10 minutes"
+    );
+    return res.redirect("/campgrounds");
+  } catch (e) {
+    req.flash("error", e.message);
+    return res.redirect("/campgrounds");
+  }
+};
+
+// new password reset token
+module.exports.newPasswordResetToken = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      req.flash("error", "This account does not exist");
+      return res.redirect("/register");
+    }
+    const userToken = new Token({
+      _userId: user._id,
+      token: crypto.randomBytes(16).toString("hex"),
+    });
+    await userToken.save();
+    const url = helpers.setUrl(
+      req,
+      "forgot-password",
+      `?token=${userToken.token}`
+    );
+    await new Email(user, url).sendPasswordReset();
+    req.flash("success", "Please check your email to reset your pasword.");
+    return res.redirect("/campgrounds");
+  } catch (e) {
+    req.flash("error", e.message);
+    return res.redirect("/campgrounds");
+  }
+};
+
+// verify password token
+module.exports.verifyPasswordToken = async (req, res, next) => {
+  try {
+    const passwordToken = await Token.findOne({ token: req.query.token });
+    if (!passwordToken) {
+      req.flash(
+        "error",
+        "Token is invalid or expired, please request a new password reset token."
+      );
+      return res.redirect("/login");
+    }
+    return res.render("users/change-password", { passwordToken });
+  } catch (e) {
+    req.flash("error", e.message);
+    return res.redirect("/campgrounds");
+  }
+};
+
+// Change password
+module.exports.changePassword = async (req, res, next) => {
+  try {
+    let { password, password2 } = req.body;
+    if (password !== password2) {
+      req.flash(
+        "error",
+        "Passwords do not match. Click the link in your email to try again"
+      );
+      return res.redirect("/login");
+    }
+    const token = await Token.findOne({ token: req.body.token });
+    if (!token) {
+      req.flash(
+        "error",
+        "Token is invalid, please try to reset your password again."
+      );
+      return res.redirect("/login");
+    }
+    const user = await User.findOne({ _id: token._userId });
+    await user.setPassword(req.body.password, async (err) => {
+      if (err) {
+        req.flash("error", err.message);
+        return res.redirect("/campgrounds");
+      }
+      delete req.body.password2;
+      user.attempts = 0;
+      user.expires = undefined;
+      let url = helpers.setUrl(req, "login", "");
+      await new Email(user, url).sendPasswordChange();
+      await user.save();
+      req.flash(
+        "success",
+        "Your password has been successfully updated. Please login using your new password"
+      );
+      res.redirect("/login");
+    });
+  } catch (e) {
+    req.flash("error", e.message);
+    return res.redirect("/campgrounds");
+  }
 };
 
 module.exports.renderLogin = (req, res) => {
