@@ -46,12 +46,14 @@
           <li class="list-group-item text-muted">
             <%= campground.location%>
           </li>
-          <li class="list-group-item">Submitted by <%= campground.author.username%>
+          <li class="list-group-item">Submitted by <%= campground.author ? campground.author.username : "a former member" %>
           </li>
           <li class="list-group-item">$<%= campground.price%>/night</li>
         </ul>
         <% if(
            currentUser
+           &&
+           campground.author
            &&
            campground.author.equals(currentUser._id)
            ||
@@ -149,7 +151,7 @@
             <div class="card mb-3">
               <div class="card-body">
                 <h5 class="card-title">
-                  <%= review.author.username%>
+                  <%= review.author ? review.author.username : "A former member" %>
                 </h5>
                 <p class="starability-result"
                    data-rating="<%=review.rating%>"> Rated: <%= review.rating
@@ -160,6 +162,8 @@
                 </p>
                 <% if(
                    currentUser
+                   &&
+                   review.author
                    &&
                    review.author.equals(currentUser._id)
                    ||
