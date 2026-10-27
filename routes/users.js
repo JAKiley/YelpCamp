@@ -4,6 +4,7 @@ const router = express.Router();
 const catchAsync = require("../utils/catchAsync");
 const helpers = require("../utils/helpers");
 const users = require("../controllers/users");
+const { storeReturnTo } = require("../middleware");
 
 router
   .route("/register")
@@ -28,6 +29,7 @@ router
   .get(users.renderLogin)
   .post(
     catchAsync(helpers.checkIfNotVerified),
+    storeReturnTo,
     passport.authenticate("local", {
       failureFlash: true,
       failureRedirect: "/login",

@@ -12,6 +12,15 @@ module.exports.isLoggedIn = (req, res, next) => {
   next();
 };
 
+// Passport 0.6+ resets the session on login, which would erase returnTo.
+// Copy it to res.locals before passport.authenticate runs.
+module.exports.storeReturnTo = (req, res, next) => {
+  if (req.session.returnTo) {
+    res.locals.returnTo = req.session.returnTo;
+  }
+  next();
+};
+
 module.exports.validateCampground = (req, res, next) => {
   const { error } = campgroundSchema.validate(req.body);
   if (error) {
