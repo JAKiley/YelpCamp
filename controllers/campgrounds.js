@@ -4,6 +4,25 @@ const mapBoxToken = process.env.MAPBOX_TOKEN;
 const geocoder = mbxGeocoding({ accessToken: mapBoxToken });
 const { cloudinary } = require("../cloudinary");
 
+// Look up a location with Mapbox. Returns a GeoJSON point, or null if nothing matched.
+async function geocodeLocation(location) {
+  const geoData = await geocoder
+    .forwardGeocode({
+      query: location,
+      limit: 1,
+    })
+    .send();
+  const feature = geoData.body.features[0];
+  return feature ? feature.geometry : null;
+}
+
+// Remove photos that were uploaded to Cloudinary for a save that is being abandoned.
+async function removeUploads(files = []) {
+  for (const f of files) {
+    await cloudinary.uploader.destroy(f.filename);
+  }
+}
+
 module.exports.index = async (req, res) => {
   const campgrounds = await Campground.paginate(
     {},
@@ -48,14 +67,17 @@ module.exports.renderNewForm = (req, res) => {
 };
 
 module.exports.createCampground = async (req, res, next) => {
-  const geoData = await geocoder
-    .forwardGeocode({
-      query: req.body.campground.location,
-      limit: 1,
-    })
-    .send();
+  const geometry = await geocodeLocation(req.body.campground.location);
+  if (!geometry) {
+    await removeUploads(req.files);
+    req.flash(
+      "error",
+      `Could not find "${req.body.campground.location}" on the map. Please check the location and try again.`
+    );
+    return res.redirect("/campgrounds/new");
+  }
   const campground = new Campground(req.body.campground);
-  campground.geometry = geoData.body.features[0].geometry;
+  campground.geometry = geometry;
   campground.images = req.files.map((f) => ({
     url: f.path,
     filename: f.filename,
@@ -94,8 +116,19 @@ module.exports.renderEditForm = async (req, res) => {
 
 module.exports.updateCampground = async (req, res) => {
   const { id } = req.params;
+  // Look the location up again on every save, so the map pin follows the location text.
+  const geometry = await geocodeLocation(req.body.campground.location);
+  if (!geometry) {
+    await removeUploads(req.files);
+    req.flash(
+      "error",
+      `Could not find "${req.body.campground.location}" on the map. Please check the location and try again.`
+    );
+    return res.redirect(`/campgrounds/${id}/edit`);
+  }
   const campground = await Campground.findByIdAndUpdate(id, {
     ...req.body.campground,
+    geometry,
   });
   const imgs = req.files.map((f) => ({ url: f.path, filename: f.filename }));
   campground.images.push(...imgs);
