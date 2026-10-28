@@ -1,27 +1,28 @@
-// using Twilio SendGrid's v3 Node.js Library
-// https://github.com/sendgrid/sendgrid-nodejs
-const sgMail = require("@sendgrid/mail");
+// Sends one test email through Resend, to check the API key and sending domain.
+// Usage: node testemail.js you@example.com
+const { Resend } = require("resend");
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-console.log(sgMail);
-const msg = {
-  to: "wb1dfs@outlook.com",
-  from: "admin@rakjab.com",
-  subject: "Sending with Twilio SendGrid is Fun",
-  text: "and easy to do anywhere, even with Node.js",
-  html: "<strong>and easy to do anywhere, even with Node.js</strong>",
-};
-//sgMail.send(msg);
-(async () => {
-  try {
-    await sgMail.send(msg);
-  } catch (error) {
-    console.error(error);
 
-    if (error.response) {
-      console.error(error.response.body);
-    }
+const to = process.argv[2];
+if (!to) {
+  console.error("Usage: node testemail.js you@example.com");
+  process.exit(1);
+}
+
+(async () => {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { data, error } = await resend.emails.send({
+    from: `${process.env.NAME} <${process.env.EMAIL_FROM}>`,
+    to,
+    subject: "YelpCamp test email",
+    text: "If you can read this, YelpCamp can send email through Resend.",
+    html: "<strong>If you can read this, YelpCamp can send email through Resend.</strong>",
+  });
+  if (error) {
+    console.error("Send failed:", error);
+    process.exit(1);
   }
+  console.log("Sent! Resend email id:", data.id);
 })();

@@ -32,7 +32,16 @@ module.exports.register = async (req, res, next) => {
     });
     await userToken.save();
     const url = helpers.setUrl(req, "verify", `token?token=${userToken.token}`);
-    await new Email(user, url).sendWelcome("YelpCamp");
+    try {
+      await new Email(user, url).sendWelcome("YelpCamp");
+    } catch (emailErr) {
+      // The account exists now, so don't send them back to register again.
+      req.flash(
+        "error",
+        `Your account was created, ${username}, but we couldn't send the verification email. Please use "Resend Token" on the login page in a few minutes.`
+      );
+      return res.redirect("/campgrounds");
+    }
     req.flash(
       "success",
       `Thanks for registering, ${username}. Please check your email to verify your account. Link expires in 10 minutes`
@@ -184,9 +193,14 @@ module.exports.changePassword = async (req, res, next) => {
       delete req.body.password2;
       user.attempts = 0;
       user.expires = undefined;
-      let url = helpers.setUrl(req, "login", "");
-      await new Email(user, url).sendPasswordChange();
       await user.save();
+      // The password is already changed; a failed notice shouldn't undo that.
+      try {
+        let url = helpers.setUrl(req, "login", "");
+        await new Email(user, url).sendPasswordChange();
+      } catch (emailErr) {
+        // Details are logged by the Email helper.
+      }
       req.flash(
         "success",
         "Your password has been successfully updated. Please login using your new password"
