@@ -7,12 +7,10 @@ To run locally
     get into Yelpcamp folder in gitbash
     Nodemon app.Js 
 
-How to deploy to Heroku
-    get into Yelpcamp folder in gitbash
-        Heroku login
-    start another gitbash session in Yelpcamp folder
-        git push heroku main
+in browser http://localhost:3000/campgrounds
 
+on Render
+    https://yelpcamp-43k6.onrender.com/
 
 1. Roles
 https://github.com/nax3t/yelp-camp-refactored/tree/roles
